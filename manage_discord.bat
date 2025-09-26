@@ -2,12 +2,23 @@
 setlocal enabledelayedexpansion
 
 :: =================================================================================
-:: Discord Multi-Instance Manager v4.3 (Deletion Logic Fix)
+:: Discord Multi-Instance Manager v4.4 (Administrator Check)
 :: =================================================================================
-:: Fix:
-:: - Corrected a logic error where the script would cancel deletion even if "y"
-::   was entered to kill the Discord process.
+:: New Feature:
+:: - The script now automatically checks for administrator rights on startup.
+::   If it doesn't have them, it will prompt the user to self-elevate.
 :: =================================================================================
+
+:: ---------------------------------------------------------------------------------
+:: ADMINISTRATOR CHECK
+:: ---------------------------------------------------------------------------------
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Requesting administrator privileges...
+    powershell -Command "Start-Process -FilePath '%~dpnx0' -Verb RunAs" >nul
+    exit
+)
+:: ---------------------------------------------------------------------------------
 
 :: --- Environment Variables ---
 set "DISCORD_LAUNCH_EXE=%LOCALAPPDATA%\Discord\Update.exe"
@@ -243,4 +254,4 @@ goto :eof
 set "SETTINGS_FILE=%~1\Discord\settings.json"
 echo. & echo Disabling Developer Tools...
 if exist "%SETTINGS_FILE%" ( del "%SETTINGS_FILE%" & echo Developer Tools have been disabled. ) else ( echo Developer Tools were already disabled. )
-goto :eo
+goto :eof
