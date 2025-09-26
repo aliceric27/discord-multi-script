@@ -3,10 +3,11 @@ chcp 65001 > nul
 setlocal enabledelayedexpansion
 
 :: =================================================================================
-:: Discord 多開管理器 v4.1 (安全刪除) - 中文版
+:: Discord 多開管理器 v4.2 (儀表板模式) - 中文版
 :: =================================================================================
 :: 新功能:
-:: - 在刪除前會檢查 Discord 處理程序，並提示是否要強制關閉，以確保刪除成功。
+:: - 在實例操作選單中新增 [F] 指令，可快速開啟該實例的資料夾。
+:: - 在刪除前會檢查 Discord 處理程序，並提示是否要強制關閉。
 :: =================================================================================
 
 :: --- 環境變數設定 ---
@@ -85,7 +86,7 @@ echo   開發者工具: !STATUS_DISPLAY!
 echo.
 echo ============================================================
 echo.
-echo   [L] 啟動   [M] 修改名稱   [T] 切換DevTools   [D] 刪除
+echo   [L] 啟動   [M] 改名   [T] 切換Dev   [D] 刪除   [F] 開啟資料夾
 echo.
 echo   [B] 返回主列表
 echo.
@@ -111,6 +112,11 @@ if /i "%action_choice%"=="t" (
 if /i "%action_choice%"=="d" (
     call :action_delete
     goto main_loop
+)
+if /i "%action_choice%"=="f" (
+    call :action_open_folder "%INSTANCE_PATH%"
+    pause
+    goto instance_action_menu
 )
 if "%action_choice%"=="" goto instance_action_menu
 
@@ -207,6 +213,11 @@ if %errorlevel% equ 0 (
 echo 正在刪除實例 '%selected_instance_name%'...
 rmdir /s /q "%PROFILES_BASE_PATH%\%selected_instance_name%"
 echo 實例已成功刪除。 & pause
+goto :eof
+
+:action_open_folder
+echo. & echo 正在檔案總管中開啟資料夾...
+explorer "%~1"
 goto :eof
 
 :: =================================================================================

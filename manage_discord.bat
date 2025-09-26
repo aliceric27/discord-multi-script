@@ -2,11 +2,11 @@
 setlocal enabledelayedexpansion
 
 :: =================================================================================
-:: Discord Multi-Instance Manager v4.1 (Safe Deletion)
+:: Discord Multi-Instance Manager v4.2 (Dashboard Mode)
 :: =================================================================================
 :: New Feature:
-:: - Checks for running Discord processes before deletion and prompts to kill them,
-::   ensuring the deletion succeeds.
+:: - Added [F] command to the instance action menu to open the profile folder.
+:: - Checks for running Discord processes before deletion and prompts to kill them.
 :: =================================================================================
 
 :: --- Environment Variables ---
@@ -82,7 +82,7 @@ echo   DevTools: !DEVTOOLS_STATUS!
 echo.
 echo ============================================================
 echo.
-echo   [L] Launch   [M] Modify Name   [T] Toggle DevTools   [D] Delete
+echo   [L] Launch [M] Rename [T] Toggle Dev [D] Delete [F] Open Folder
 echo.
 echo   [B] Back to Main List
 echo.
@@ -108,6 +108,11 @@ if /i "%action_choice%"=="t" (
 if /i "%action_choice%"=="d" (
     call :action_delete
     goto main_loop
+)
+if /i "%action_choice%"=="f" (
+    call :action_open_folder "%INSTANCE_PATH%"
+    pause
+    goto instance_action_menu
 )
 if "%action_choice%"=="" goto instance_action_menu
 
@@ -204,6 +209,11 @@ if %errorlevel% equ 0 (
 echo Deleting instance '%selected_instance_name%'...
 rmdir /s /q "%PROFILES_BASE_PATH%\%selected_instance_name%"
 echo Instance deleted successfully. & pause
+goto :eof
+
+:action_open_folder
+echo. & echo Opening folder in File Explorer...
+explorer "%~1"
 goto :eof
 
 :: =================================================================================
