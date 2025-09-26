@@ -3,11 +3,10 @@ chcp 65001 > nul
 setlocal enabledelayedexpansion
 
 :: =================================================================================
-:: Discord 多開管理器 v4.2 (儀表板模式) - 中文版
+:: Discord 多開管理器 v4.3 (刪除邏輯修正) - 中文版
 :: =================================================================================
-:: 新功能:
-:: - 在實例操作選單中新增 [F] 指令，可快速開啟該實例的資料夾。
-:: - 在刪除前會檢查 Discord 處理程序，並提示是否要強制關閉。
+:: 修正:
+:: - 修復了在刪除時，即使輸入 "y" 也會取消操作的邏輯錯誤。
 :: =================================================================================
 
 :: --- 環境變數設定 ---
@@ -194,22 +193,23 @@ if /i not "%confirm%"=="y" ( echo 已取消刪除操作。 & pause & goto :eof )
 
 echo. & echo 正在檢查 Discord 處理程序...
 tasklist | findstr /i "discord.exe" >nul
-if %errorlevel% equ 0 (
-    echo 偵測到 Discord 正在背景執行。
-    set "kill_choice="
-    set /p "kill_choice=為了成功刪除，需要關閉它。是否要強制關閉所有 Discord 處理程序？ (y/n): "
-    if /i "%kill_choice%"=="y" (
-        echo 正在強制關閉 Discord...
-        taskkill /F /IM discord.exe /T >nul
-        echo 等待處理程序釋放檔案...
-        timeout /t 2 /nobreak >nul
-    ) else (
-        echo 刪除已取消。請手動關閉 Discord 後再試一次。
-        pause
-        goto :eof
-    )
+if not %errorlevel% equ 0 goto :proceed_with_delete
+
+echo 偵測到 Discord 正在背景執行。
+set "kill_choice="
+set /p "kill_choice=為了成功刪除，需要關閉它。是否要強制關閉所有 Discord 處理程序？ (y/n): "
+if /i not "%kill_choice%"=="y" (
+    echo 刪除已取消。請手動關閉 Discord 後再試一次。
+    pause
+    goto :eof
 )
 
+echo 正在強制關閉 Discord...
+taskkill /F /IM discord.exe /T >nul
+echo 等待處理程序釋放檔案...
+timeout /t 2 /nobreak >nul
+
+:proceed_with_delete
 echo 正在刪除實例 '%selected_instance_name%'...
 rmdir /s /q "%PROFILES_BASE_PATH%\%selected_instance_name%"
 echo 實例已成功刪除。 & pause

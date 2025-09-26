@@ -2,11 +2,11 @@
 setlocal enabledelayedexpansion
 
 :: =================================================================================
-:: Discord Multi-Instance Manager v4.2 (Dashboard Mode)
+:: Discord Multi-Instance Manager v4.3 (Deletion Logic Fix)
 :: =================================================================================
-:: New Feature:
-:: - Added [F] command to the instance action menu to open the profile folder.
-:: - Checks for running Discord processes before deletion and prompts to kill them.
+:: Fix:
+:: - Corrected a logic error where the script would cancel deletion even if "y"
+::   was entered to kill the Discord process.
 :: =================================================================================
 
 :: --- Environment Variables ---
@@ -190,22 +190,23 @@ if /i not "%confirm%"=="y" ( echo Deletion cancelled. & pause & goto :eof )
 
 echo. & echo Checking for running Discord processes...
 tasklist | findstr /i "discord.exe" >nul
-if %errorlevel% equ 0 (
-    echo Discord is currently running in the background.
-    set "kill_choice="
-    set /p "kill_choice=To ensure deletion succeeds, it must be closed. Force kill all Discord processes? (y/n): "
-    if /i "%kill_choice%"=="y" (
-        echo Killing Discord processes...
-        taskkill /F /IM discord.exe /T >nul
-        echo Waiting a moment for processes to release files...
-        timeout /t 2 /nobreak >nul
-    ) else (
-        echo Deletion cancelled. Please close Discord manually and try again.
-        pause
-        goto :eof
-    )
+if not %errorlevel% equ 0 goto :proceed_with_delete
+
+echo Discord is currently running in the background.
+set "kill_choice="
+set /p "kill_choice=To ensure deletion succeeds, it must be closed. Force kill all Discord processes? (y/n): "
+if /i not "%kill_choice%"=="y" (
+    echo Deletion cancelled. Please close Discord manually and try again.
+    pause
+    goto :eof
 )
 
+echo Killing Discord processes...
+taskkill /F /IM discord.exe /T >nul
+echo Waiting a moment for processes to release files...
+timeout /t 2 /nobreak >nul
+
+:proceed_with_delete
 echo Deleting instance '%selected_instance_name%'...
 rmdir /s /q "%PROFILES_BASE_PATH%\%selected_instance_name%"
 echo Instance deleted successfully. & pause
@@ -242,4 +243,4 @@ goto :eof
 set "SETTINGS_FILE=%~1\Discord\settings.json"
 echo. & echo Disabling Developer Tools...
 if exist "%SETTINGS_FILE%" ( del "%SETTINGS_FILE%" & echo Developer Tools have been disabled. ) else ( echo Developer Tools were already disabled. )
-goto :eof
+goto :eo
